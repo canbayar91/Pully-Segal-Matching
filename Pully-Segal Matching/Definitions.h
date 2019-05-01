@@ -22,6 +22,7 @@ struct FaceData {
 };
 
 struct HalfEdgeData {
+	bool matched = false;
 	VertexData* origin;
 	HalfEdgeData* pair;
 	HalfEdgeData* next;

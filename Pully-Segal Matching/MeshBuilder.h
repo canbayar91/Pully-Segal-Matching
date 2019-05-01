@@ -2,6 +2,7 @@
 #define MESH_BUILDER
 
 #include "TriangularMesh.h"
+#include <map>
 
 class MeshBuilder {
 public:
@@ -10,7 +11,7 @@ public:
 	static MeshBuilder* getInstance();
 
 	// Calculates the heuristic matching of the triangles
-	void calculateMatching(const TriangularMesh* mesh);
+	std::map<unsigned int, unsigned int> calculateMatching(const TriangularMesh* mesh);
 
 private:
 
@@ -23,8 +24,8 @@ private:
 	// Destructor
 	~MeshBuilder();
 
-	// Try to match a face with one of its neighbors
-	bool matchFace(FaceData* face);
+	// Try to match a face with one of its neighbors and return matched face's id
+	int matchFace(FaceData* face);
 
 	// Update the priority of the neighbors of a matched face
 	void updateNeighbors(FaceData* face);
