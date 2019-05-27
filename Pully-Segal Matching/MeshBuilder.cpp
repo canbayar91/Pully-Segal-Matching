@@ -1,36 +1,26 @@
 #include "MeshBuilder.h"
 #include <iostream>
-#include <queue>
 
-MeshBuilder* MeshBuilder::instance;
+MeshBuilder::MeshBuilder(const TriangularMesh* mesh) {
 
-MeshBuilder::MeshBuilder() {
-	instance = new MeshBuilder();
-}
-
-MeshBuilder::~MeshBuilder() {
-	delete instance;
-	instance = 0;
-}
-
-MeshBuilder* MeshBuilder::getInstance() {
-	return instance;
-}
-
-std::map<unsigned int, unsigned int> MeshBuilder::calculateMatching(const TriangularMesh* mesh) {
-
-	// Create a priority queue and store mesh triangles
-	std::priority_queue<FaceData*, std::vector<FaceData*>, PriorityOrder> priorityQueue;
+	// Store mesh triangles on a priority queue
 	const std::vector<FaceData*> faceList = mesh->getFaces();
 	for (size_t i = 0; i < mesh->getFaceCount(); i++) {
 		priorityQueue.push(faceList[i]);
 	}
 
-	// Create a map to store matching face list
-	std::map<unsigned int, unsigned int> matchingMap;
+	// Store the mesh
+	this->mesh = mesh;
+}
 
-	// Create a vector to store the faces that could not be matched
-	std::vector<FaceData*> unmatchedFaces;
+MeshBuilder::~MeshBuilder() {
+
+	// Delete the mesh
+	delete mesh;
+	mesh = 0;
+}
+
+void MeshBuilder::calculateMatching() {
 
 	// Pop and try to match triangles until the priority queue is empty
 	while (priorityQueue.size() != 0) {
@@ -41,16 +31,23 @@ std::map<unsigned int, unsigned int> MeshBuilder::calculateMatching(const Triang
 		// Pop the face at the top in any case
 		priorityQueue.pop();
 
-		// If the face is not already matched, try to find a matching
-		if (!currentFace->matched) {
+		// Skip the faces that has already been processed
+		if (!currentFace->processed) {
 
-			// Try to match the face with one of its neighbors, add it to the unmatched faces list if it fails
-			int neighborId = matchFace(currentFace);
-			if (neighborId == -1) {
-				unmatchedFaces.push_back(currentFace);
-			} else {
-				matchingMap[currentFace->id] = neighborId;
+			// If the face is not already matched and encountered, try to find a matching
+			if (!currentFace->matched) {
+
+				// Try to match the face with one of its neighbors, add it to the unmatched faces list if it fails
+				int neighborId = matchFace(currentFace);
+				if (neighborId == -1) {
+					unmatchedFaces.push_back(currentFace);
+				} else {
+					matchingMap[currentFace->id] = neighborId;
+				}
 			}
+
+			// Keep track of the processed face's id
+			currentFace->processed = true;
 		}
 	}
 
@@ -61,9 +58,6 @@ std::map<unsigned int, unsigned int> MeshBuilder::calculateMatching(const Triang
 	// Print out the matching statistics
 	std::cout << "Unmatched face count: " << unmatchedFaces.size() << std::endl;
 	std::cout << "Matching percentage: " << matchingPercentage << std::endl;
-
-	// Return the map of matchings
-	return matchingMap;
 }
 
 int MeshBuilder::matchFace(FaceData* face) {
@@ -150,6 +144,8 @@ void MeshBuilder::updatePriority(FaceData* face) {
 			// Update the free neighbor count
 			FaceData* neighbor = runner->pair->face;
 			if (!neighbor->matched) {
+
+				// Increment the count of free neighbors
 				freeNeighborCount++;
 
 				// Update the low priority neighbor count
@@ -172,5 +168,18 @@ void MeshBuilder::updatePriority(FaceData* face) {
 		} else {
 			face->priority = 0;
 		}
+
+		// This is an exploit to keep highest priority faces on top
+		if (!face->processed) {
+			priorityQueue.push(face);
+		}
 	}
+}
+
+std::map<unsigned int, unsigned int> MeshBuilder::getMatching() {
+	return matchingMap;
+}
+
+std::vector<FaceData*> MeshBuilder::getUnmatchedFaces() {
+	return unmatchedFaces;
 }

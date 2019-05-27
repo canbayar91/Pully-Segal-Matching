@@ -16,6 +16,7 @@ struct VertexData {
 
 struct FaceData {
 	bool matched = false;
+	bool processed = false;
 	unsigned int id;
 	int priority = 0;
 	HalfEdgeData* half;
