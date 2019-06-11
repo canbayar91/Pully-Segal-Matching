@@ -32,7 +32,7 @@ int main(int argc, char **argv) {
 	std::cout << "Running time: " << timeDifference / CLOCKS_PER_SEC;
 
 	// Write the quadrilateral mesh into an off file
-	// std::map<unsigned int, unsigned int> matching = builder.getMatching();
+	// std::map<unsigned int, unsigned int> matching = builder->getMatching();
 	// MeshWriter::getInstance()->writeMesh("output.off", mesh, matching);
 
 	// Delete the mesh builder instance
